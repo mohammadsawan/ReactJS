@@ -18,6 +18,10 @@ export const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 
-export const signInWithEmail = (email, pass) => {
+export const signUpWithEmail = (email, pass) => {
   return createUserWithEmailAndPassword(auth, email, pass);
+};
+
+export const logInWithEmail = (email, pass) => {
+  return signInWithEmailAndPassword(auth, email, pass);
 };

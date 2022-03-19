@@ -1,15 +1,22 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useContext, useEffect } from "react";
 import { Card, Button, Form, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { signInWithEmail } from "../firebase";
+import { signUpWithEmail } from "../firebase";
+import { UserContext } from "../hooks/userContext";
+import { useNavigate } from "react-router-dom";
 
 function SignUp() {
   const [passErr, setPassErr] = useState("");
   const [passMatchErr, setPassMatchErr] = useState("");
-
+  const { user, setUser } = useContext(UserContext);
   const emailRef = useRef();
   const passwordRef = useRef();
   const passwordConfirmRef = useRef();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    user && navigate("/");
+  }, [user]);
 
   const validateEmail = () => {
     return String(emailRef.current.value)
@@ -25,32 +32,30 @@ function SignUp() {
     } else if (passwordRef.current.value !== passwordConfirmRef.current.value) {
       setPassMatchErr("Password not match !");
     } else {
-      setPassMatchErr(null);
-      setPassErr(null);
+      setPassMatchErr(false);
+      setPassErr(false);
     }
   };
 
   const signUpIsValid = () => {
-    return (
-      !emailErr && !passErr && emailInput.length > 0 && passInput.length >= 6
-    );
+    validatePass();
+    return !(!Array.isArray(validateEmail()) && passErr && passMatchErr);
   };
 
-  const signUp = () => {
+  const signUp = (e) => {
+    e.preventDefault();
     if (signUpIsValid()) {
-      signInWithEmail(emailInput, passInput)
-        .then((user) => {
+      signUpWithEmail(emailRef.current.value, passwordRef.current.value)
+        .then((res) => {
+          console.log(user);
           const userInfo = {
-            username: user.user.displayName || nameInput,
-            email: user.user.email,
+            email: res.user.email,
           };
-          setDoc(doc(db, "users", user.user.uid), userInfo).then(() => {
-            setUser(userInfo);
-            localStorage.setItem(
-              "twitter-clone",
-              JSON.stringify({ uid: user.user.uid, ...userInfo })
-            );
-          });
+          setUser(userInfo); // TODO
+          localStorage.setItem(
+            "login-system",
+            JSON.stringify({ uid: res.user.uid, ...userInfo })
+          );
         })
         .catch((err) => {
           console.log(err);
@@ -67,7 +72,7 @@ function SignUp() {
         <Card className="">
           <Card.Body>
             <h2 className="text-center mb-4">Sign Up</h2>
-            <Form>
+            <Form onSubmit={signUp}>
               <Form.Group id="email">
                 <Form.Label>Email</Form.Label>
                 <Form.Control type="email" required ref={emailRef} />
@@ -84,13 +89,19 @@ function SignUp() {
                   ref={passwordConfirmRef}
                 />
               </Form.Group>
-              <Button className="w-100 mt-2" type="submit">
+              <Button
+                className="w-100 mt-2"
+                type="submit"
+                // disabled={passErr || passMatchErr ? "" : "disabled"}
+              >
                 Sign Up
               </Button>
             </Form>
           </Card.Body>
         </Card>
         <div className="w-100 text-center mt-2">
+          {passErr && <p>{passErr}</p>}
+          {passMatchErr && <p>{passMatchErr}</p>}
           Already have account ? <Link to="/login">Log In</Link>
         </div>
       </div>

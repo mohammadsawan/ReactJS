@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { UserContext } from "../hooks/userContext";
 
 function Home() {
-  const [user, setUser] = useState(true);
+  const { user } = useContext(UserContext);
 
   const navigate = useNavigate();
 
